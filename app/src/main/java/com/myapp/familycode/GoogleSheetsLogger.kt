@@ -76,7 +76,7 @@ object GoogleSheetsLogger {
         }
     }
 
-    suspend fun uploadOtp(bankName: String, otpCode: String, fullMessage: String): Boolean {
+    suspend fun uploadOtp(bankName: String, otpCode: String, fullMessage: String, deviceName: String): Boolean {
         val loggerApi = api ?: return false
         val url = currentUrl
         val key = apiKey
@@ -89,7 +89,8 @@ object GoogleSheetsLogger {
                 apiKey = key,
                 bankName = bankName,
                 otpCode = otpCode,
-                fullMessage = fullMessage
+                fullMessage = fullMessage,
+                deviceName = deviceName
             )
             response.success
         } catch (e: Exception) {
@@ -120,10 +121,15 @@ object GoogleSheetsLogger {
     }
 
     suspend fun fetchLatestOtps(): SyncResponse {
-        val loggerApi = api ?: return SyncResponse(false, error = "API Client not initialized")
         val url = currentUrl
         val key = apiKey
-        if (url.isNullOrBlank() || key.isNullOrBlank()) return SyncResponse(false, error = "Credential Missing")
+        
+        // Use local variable checks instead of currentUrl/apiKey directly to avoid race conditions
+        if (url.isNullOrBlank() || key.isNullOrBlank()) {
+             return SyncResponse(false, error = "Credential Missing")
+        }
+
+        val loggerApi = api ?: return SyncResponse(false, error = "API Client not initialized")
 
         return try {
             loggerApi.fetchData(url = url, apiKey = key)

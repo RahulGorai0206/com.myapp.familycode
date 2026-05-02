@@ -64,13 +64,31 @@ fun OtpListItem(otpItem: OtpItem) {
             Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    otpItem.bankName, 
-                    fontWeight = FontWeight.ExtraBold, 
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        otpItem.bankName, 
+                        fontWeight = FontWeight.ExtraBold, 
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    otpItem.deviceName?.let { name ->
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                name.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                color = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 Text(
                     formatTimestamp(otpItem.timestamp), 
                     style = MaterialTheme.typography.labelSmall, 
@@ -110,9 +128,14 @@ private fun copyToClipboard(context: Context, text: String) {
 
 private fun formatTimestamp(timestamp: String): String {
     return try {
+        // GAS new Date().toISOString() returns format: 2026-05-02T22:30:10.000Z
         val zdt = ZonedDateTime.parse(timestamp)
+        // Convert to IST (Asia/Kolkata)
+        val istZone = java.time.ZoneId.of("Asia/Kolkata")
+        val istDateTime = zdt.withZoneSameInstant(istZone)
+        
         val formatter = DateTimeFormatter.ofPattern("dd MMM, hh:mm a", Locale.getDefault())
-        zdt.format(formatter)
+        istDateTime.format(formatter)
     } catch (e: Exception) {
         timestamp
     }

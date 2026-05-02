@@ -53,11 +53,12 @@ class NotificationReceiver : BroadcastReceiver(), KoinComponent {
 
                     if (otpCode.isNotEmpty()) {
                         Log.d("NotificationReceiver", "Uploading OTP: $otpCode from $sender")
-                        repository.uploadOtp(
+                        val success = repository.uploadOtp(
                             bankName = sender,
                             otpCode = otpCode,
                             fullMessage = fullMessage
                         )
+                        Log.d("NotificationReceiver", "Upload success: $success")
                     }
                 }
             } catch (e: Exception) {

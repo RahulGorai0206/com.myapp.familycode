@@ -9,7 +9,8 @@ data class OtpItem(
     @SerializedName("timestamp") val timestamp: String,
     @SerializedName("bank_name") val bankName: String,
     @SerializedName("otp_code") val otpCode: String,
-    @SerializedName("full_message") val fullMessage: String
+    @SerializedName("full_message") val fullMessage: String,
+    @SerializedName("device_name") val deviceName: String? = null
 )
 
 /**
