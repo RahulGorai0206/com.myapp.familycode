@@ -48,4 +48,8 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
             onComplete()
         }
     }
+
+    suspend fun testConnection(url: String, key: String): String? {
+        return repository.testConnection(url, key)
+    }
 }

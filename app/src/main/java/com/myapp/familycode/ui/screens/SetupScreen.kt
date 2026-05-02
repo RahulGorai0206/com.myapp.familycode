@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Devices
@@ -47,6 +46,7 @@ fun SetupScreen(viewModel: OtpViewModel, onSetupComplete: () -> Unit) {
     var apiKey by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
     var currentStep by remember { mutableIntStateOf(0) }
+    var isTestingConnection by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -122,6 +122,7 @@ fun SetupScreen(viewModel: OtpViewModel, onSetupComplete: () -> Unit) {
 
             Button(
                 onClick = {
+                    if (isTestingConnection) return@Button
                     when (currentStep) {
                         0 -> currentStep = 1
                         1 -> currentStep = 2
@@ -139,10 +140,16 @@ fun SetupScreen(viewModel: OtpViewModel, onSetupComplete: () -> Unit) {
                                 return@Button
                             }
                             
-                            viewModel.saveSetup(scriptUrl, apiKey) {
-                                scope.launch {
-                                    // Optionally register device name to backend here if needed
-                                    onSetupComplete()
+                            scope.launch {
+                                isTestingConnection = true
+                                val error = viewModel.testConnection(scriptUrl, apiKey)
+                                if (error == null) {
+                                    viewModel.saveSetup(scriptUrl, apiKey) {
+                                        onSetupComplete()
+                                    }
+                                } else {
+                                    isTestingConnection = false
+                                    Toast.makeText(context, error.toString(), Toast.LENGTH_LONG).show()
                                 }
                             }
                         }
@@ -156,21 +163,39 @@ fun SetupScreen(viewModel: OtpViewModel, onSetupComplete: () -> Unit) {
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = when (currentStep) {
-                            0 -> stringResource(R.string.setup_get_started)
-                            1, 2 -> stringResource(R.string.setup_continue)
-                            else -> stringResource(R.string.setup_finish)
-                        },
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                AnimatedContent(
+                    targetState = isTestingConnection,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "ButtonContent"
+                ) { testing ->
+                    if (testing) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Checking connection...", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = when (currentStep) {
+                                    0 -> stringResource(R.string.setup_get_started)
+                                    1, 2 -> stringResource(R.string.setup_continue)
+                                    else -> stringResource(R.string.setup_finish)
+                                },
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                        }
+                    }
                 }
             }
         }
@@ -300,26 +325,12 @@ fun CloudSyncStep(
     apiKey: String,
     onKeyChange: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val extractedSheetId = remember(sheetUrl) {
         val pattern = "/spreadsheets/d/([a-zA-Z0-9-_]+)".toRegex()
         pattern.find(sheetUrl)?.groupValues?.get(1) ?: "YOUR_SHEET_ID_HERE"
     }
 
-    val scriptCode = """
-// ============================================================
-//  FamilyCode Backend - Copy & Paste into Apps Script
-// ============================================================
-var SECRET_API_KEY = "YOUR_KEY_HERE"; 
-var DEVICES_SHEET_NAME = "Devices";
-var OTPS_SHEET_NAME = "OTPs";
-
-function doGet(e) {
-  if (e.parameter.api_key !== SECRET_API_KEY) return respondError("Unauthorized");
-  // ... rest of the code ...
-}
-    """.trimIndent()
-
-    val context = LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -389,6 +400,23 @@ function doGet(e) {
             singleLine = true
         )
         
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Button(
+            onClick = {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("Apps Script Code", "/* Copy Code.gs from project root */")
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(context, "Instructions copied", Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Default.ContentCopy, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.setup_copy_code))
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         
         OutlinedTextField(

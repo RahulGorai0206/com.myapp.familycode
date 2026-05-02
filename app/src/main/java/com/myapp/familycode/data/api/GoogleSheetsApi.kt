@@ -4,9 +4,7 @@ import com.myapp.familycode.data.model.SimpleResponse
 import com.myapp.familycode.data.model.SyncResponse
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.Query
 import retrofit2.http.Url
 
 interface GoogleSheetsApi {
@@ -24,10 +22,11 @@ interface GoogleSheetsApi {
         @Field("full_message") fullMessage: String? = null
     ): SimpleResponse
 
-    @GET
+    @FormUrlEncoded
+    @POST
     suspend fun fetchData(
         @Url url: String,
-        @Query("action") action: String = "fetch_data",
-        @Query("api_key") apiKey: String
+        @Field("action") action: String = "fetch_data",
+        @Field("api_key") apiKey: String
     ): SyncResponse
 }
