@@ -1,6 +1,5 @@
 package com.myapp.familycode.ui.screens
 
-import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
@@ -325,7 +324,6 @@ fun CloudSyncStep(
     apiKey: String,
     onKeyChange: (String) -> Unit
 ) {
-    val context = LocalContext.current
     val extractedSheetId = remember(sheetUrl) {
         val pattern = "/spreadsheets/d/([a-zA-Z0-9-_]+)".toRegex()
         pattern.find(sheetUrl)?.groupValues?.get(1) ?: "YOUR_SHEET_ID_HERE"
@@ -400,23 +398,6 @@ fun CloudSyncStep(
             singleLine = true
         )
         
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Button(
-            onClick = {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("Apps Script Code", "/* Copy Code.gs from project root */")
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(context, "Instructions copied", Toast.LENGTH_SHORT).show()
-            },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Icon(Icons.Default.ContentCopy, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.setup_copy_code))
-        }
-
         Spacer(modifier = Modifier.height(16.dp))
         
         OutlinedTextField(
