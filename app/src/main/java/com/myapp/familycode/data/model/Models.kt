@@ -1,0 +1,31 @@
+package com.myapp.familycode.data.model
+
+import com.google.gson.annotations.SerializedName
+
+/**
+ * Represents a single OTP item from the backend.
+ */
+data class OtpItem(
+    @SerializedName("timestamp") val timestamp: String,
+    @SerializedName("bank_name") val bankName: String,
+    @SerializedName("otp_code") val otpCode: String,
+    @SerializedName("full_message") val fullMessage: String
+)
+
+/**
+ * Represents the combined response from the 'fetch_data' action.
+ */
+data class SyncResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("device_count") val deviceCount: Int? = null,
+    @SerializedName("recent_otps") val recentOtps: List<OtpItem>? = null,
+    @SerializedName("error") val error: String? = null
+)
+
+/**
+ * Generic response for simple POST actions.
+ */
+data class SimpleResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("error") val error: String? = null
+)

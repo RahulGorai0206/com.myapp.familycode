@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">FamilyCode</string>
+    <string name="setup_get_started">Get Started</string>
+    <string name="setup_continue">Continue</string>
+    <string name="setup_finish">Finish Setup</string>
+    <string name="setup_welcome_title">Welcome to FamilyCode</string>
+    <string name="setup_welcome_description">Your family OTP sharing companion. Intercept SMS OTPs and sync them with your family devices instantly.</string>
+    <string name="setup_device_name_title">Device Identity</string>
+    <string name="setup_device_name_description">Give this device a name so your family knows who is receiving the OTP.</string>
+    <string name="setup_device_name_label">Device Name</string>
+    <string name="setup_device_name_placeholder">e.g. Mom\'s Phone</string>
+    <string name="setup_device_name_error">Please enter a device name</string>
+    <string name="setup_features_title">Key Features</string>
+    <string name="setup_feature_sms_title">Automatic OTP Sync</string>
+    <string name="setup_feature_sms_desc">FamilyCode automatically detects OTP SMS and syncs them to your Google Sheet.</string>
+    <string name="setup_feature_insights_title">Family Access</string>
+    <string name="setup_feature_insights_desc">All family members can see the last 15 OTPs received across all linked devices.</string>
+    <string name="setup_feature_cloud_title">Secure Backend</string>
+    <string name="setup_feature_cloud_desc">Uses Google Apps Script and Sheets to keep your data private and accessible.</string>
+
+    <string name="setup_cloud_title">Cloud Configuration</string>
+    <string name="setup_cloud_description">FamilyCode requires a Google Apps Script backend to sync OTPs. Please follow the instructions to set it up.</string>
+    <string name="setup_cloud_enable_label">Enable Cloud Sync</string>
+    <string name="setup_cloud_note">Make sure your Apps Script is deployed as a Web App.</string>
+    <string name="setup_cloud_url_label">Google Script URL</string>
+    <string name="setup_cloud_url_placeholder">https://script.google.com/macros/s/&#8230;</string>
+    <string name="setup_sheet_url_label">Google Sheet URL</string>
+    <string name="setup_sheet_url_placeholder">https://docs.google.com/spreadsheets/d/&#8230;</string>
+    <string name="setup_cloud_generate_key">Generate API Key</string>
+    <string name="setup_cloud_key_label">Your API Key</string>
+
+    <string name="setup_instructions_title">Setup Instructions</string>
+    <string name="setup_step_1">1. Create a new Google Sheet and copy its URL.</string>
+    <string name="setup_step_2">2. Paste the Sheet URL in the box below.</string>
+    <string name="setup_step_3">3. Click \"Copy Code\" to copy the Apps Script code.</string>
+    <string name="setup_step_4">4. In your Google Sheet, go to Extensions -> Apps Script.</string>
+    <string name="setup_step_5">5. Delete any existing code, paste the copied code, and Save (Ctrl+S).</string>
+    <string name="setup_step_6">6. Click \"Generate API Key\" below, copy it.</string>
+    <string name="setup_step_7">7. In Apps Script, go to Code.gs and update the SECRET_API_KEY variable.</string>
+    <string name="setup_step_8">8. Alternatively, set API_KEY in Project Settings -> Script Properties.</string>
+    <string name="setup_step_9">9. Click Deploy -> New Deployment -> Select Type: Web App.</string>
+    <string name="setup_step_10">10. Description: \"FamilyCode\", Execute as: Me, Who has access: Anyone -> Deploy.</string>
+    <string name="setup_step_11">11. Copy the \"Web App URL\" and paste it into the Script URL box below.</string>
+    <string name="setup_copy_code">Copy Code</string>
+</resources>
