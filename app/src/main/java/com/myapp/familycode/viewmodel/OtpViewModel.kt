@@ -42,9 +42,9 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
         }
     }
 
-    fun saveSetup(url: String, key: String, onComplete: () -> Unit) {
+    fun saveSetup(url: String, key: String, deviceName: String? = null, onComplete: () -> Unit) {
         viewModelScope.launch {
-            repository.saveSettings(url, key)
+            repository.saveSettings(url, key, deviceName)
             onComplete()
         }
     }

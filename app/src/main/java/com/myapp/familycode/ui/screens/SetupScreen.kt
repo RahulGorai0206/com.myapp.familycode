@@ -144,7 +144,7 @@ fun SetupScreen(viewModel: OtpViewModel, onSetupComplete: () -> Unit) {
                                 isTestingConnection = true
                                 val error = viewModel.testConnection(scriptUrl, apiKey)
                                 if (error == null) {
-                                    viewModel.saveSetup(scriptUrl, apiKey) {
+                                    viewModel.saveSetup(scriptUrl, apiKey, deviceName) {
                                         onSetupComplete()
                                     }
                                 } else {

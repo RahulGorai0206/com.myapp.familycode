@@ -20,10 +20,11 @@ class OtpRepository(private val context: Context) {
         emit(sharedPrefs.getString("api_key", ""))
     }
 
-    suspend fun saveSettings(url: String, key: String) {
+    suspend fun saveSettings(url: String, key: String, deviceName: String? = null) {
         sharedPrefs.edit().apply {
             putString("script_url", url)
             putString("api_key", key)
+            if (deviceName != null) putString("device_name", deviceName)
             if (sharedPrefs.getString("device_id", "").isNullOrBlank()) {
                 putString("device_id", UUID.randomUUID().toString())
             }
@@ -31,6 +32,12 @@ class OtpRepository(private val context: Context) {
         }
         GoogleSheetsLogger.updateUrl(url)
         GoogleSheetsLogger.updateApiKey(key)
+        
+        // Trigger registration if deviceName is provided
+        if (deviceName != null) {
+            val deviceId = sharedPrefs.getString("device_id", "") ?: ""
+            GoogleSheetsLogger.registerDevice(deviceId, deviceName)
+        }
     }
 
     suspend fun uploadOtp(bankName: String, otpCode: String, fullMessage: String): Boolean {

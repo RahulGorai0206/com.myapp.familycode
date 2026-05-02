@@ -78,9 +78,9 @@ object GoogleSheetsLogger {
 
     suspend fun uploadOtp(bankName: String, otpCode: String, fullMessage: String): Boolean {
         val loggerApi = api ?: return false
-        val url = currentUrl ?: return false
+        val url = currentUrl
         val key = apiKey
-        if (url.isBlank() || key.isNullOrBlank()) return false
+        if (url.isNullOrBlank() || key.isNullOrBlank()) return false
 
         return try {
             val response = loggerApi.postAction(
@@ -98,11 +98,32 @@ object GoogleSheetsLogger {
         }
     }
 
-    suspend fun fetchLatestOtps(): SyncResponse {
-        val loggerApi = api ?: return SyncResponse(false, error = "Not configured")
-        val url = currentUrl ?: return SyncResponse(false, error = "URL not set")
+    suspend fun registerDevice(deviceId: String, deviceName: String): Boolean {
+        val loggerApi = api ?: return false
+        val url = currentUrl
         val key = apiKey
-        if (url.isBlank() || key.isNullOrBlank()) return SyncResponse(false, error = "Credentials missing")
+        if (url.isNullOrBlank() || key.isNullOrBlank()) return false
+
+        return try {
+            val response = loggerApi.postAction(
+                url = url,
+                action = "register",
+                apiKey = key,
+                deviceId = deviceId,
+                deviceName = deviceName
+            )
+            response.success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun fetchLatestOtps(): SyncResponse {
+        val loggerApi = api ?: return SyncResponse(false, error = "API Client not initialized")
+        val url = currentUrl
+        val key = apiKey
+        if (url.isNullOrBlank() || key.isNullOrBlank()) return SyncResponse(false, error = "Credential Missing")
 
         return try {
             loggerApi.fetchData(url = url, apiKey = key)
