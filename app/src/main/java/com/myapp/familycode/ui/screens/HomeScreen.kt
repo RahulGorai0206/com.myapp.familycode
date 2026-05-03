@@ -135,7 +135,8 @@ fun HomeScreen(
                     DeviceListSection(
                         deviceList = deviceList,
                         deviceCount = deviceCount,
-                        currentDeviceId = viewModel.currentDeviceId
+                        currentDeviceId = viewModel.currentDeviceId,
+                        tick = tick
                     )
                 }
 

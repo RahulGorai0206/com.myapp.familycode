@@ -33,6 +33,7 @@ fun DeviceListSection(
     deviceList: List<DeviceInfo>,
     deviceCount: Int,
     currentDeviceId: String,
+    tick: Long,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(true) }
@@ -127,7 +128,11 @@ fun DeviceListSection(
                         }
                     } else {
                         deviceList.forEach { device ->
-                            DeviceRow(device, isCurrentDevice = (device.deviceId == currentDeviceId))
+                            DeviceRow(
+                                device = device, 
+                                isCurrentDevice = (device.deviceId == currentDeviceId),
+                                tick = tick
+                            )
                         }
                     }
                 }
@@ -137,8 +142,8 @@ fun DeviceListSection(
 }
 
 @Composable
-private fun DeviceRow(device: DeviceInfo, isCurrentDevice: Boolean) {
-    val isRecent = remember(device.lastSeen) { isDeviceRecent(device.lastSeen) } || isCurrentDevice
+private fun DeviceRow(device: DeviceInfo, isCurrentDevice: Boolean, tick: Long) {
+    val isRecent = remember(device.lastSeen, tick) { isDeviceRecent(device.lastSeen) } || isCurrentDevice
 
     Row(
         modifier = Modifier
@@ -203,7 +208,7 @@ private fun DeviceRow(device: DeviceInfo, isCurrentDevice: Boolean) {
                                else MaterialTheme.colorScheme.outline
                     )
                     Text(
-                        text = formatLastSeen(device.lastSeen),
+                        text = remember(device.lastSeen, tick) { formatLastSeen(device.lastSeen) },
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                         color = if (isRecent) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
