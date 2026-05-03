@@ -11,6 +11,9 @@ interface OtpDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOtps(otps: List<OtpEntity>)
 
+    @Query("SELECT * FROM otps WHERE timestamp = :timestamp LIMIT 1")
+    suspend fun getOtp(timestamp: String): OtpEntity?
+
     @Query("DELETE FROM otps")
     suspend fun clearAll()
 

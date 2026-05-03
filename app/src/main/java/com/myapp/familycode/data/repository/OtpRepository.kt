@@ -131,12 +131,18 @@ class OtpRepository(
      * Throws an exception if the network call fails.
      */
     suspend fun deleteOtpLocallyAndRemotely(timestamp: String) {
+        val otpToRestore = otpDao.getOtp(timestamp)
         // Optimistic local delete
         otpDao.deleteOtp(timestamp)
-        val deviceId = sharedPrefs.getString("device_id", "") ?: ""
         
+        val deviceId = sharedPrefs.getString("device_id", "") ?: ""
         val success = GoogleSheetsLogger.deleteOtp(timestamp, deviceId)
+        
         if (!success) {
+            // Restore it on failure
+            if (otpToRestore != null) {
+                otpDao.insertOtps(listOf(otpToRestore))
+            }
             throw Exception("Network error: Please turn on internet to delete.")
         }
     }

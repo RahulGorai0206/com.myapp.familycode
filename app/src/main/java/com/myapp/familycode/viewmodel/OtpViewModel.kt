@@ -122,7 +122,9 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
     fun saveSetup(url: String, key: String, deviceName: String? = null, onComplete: () -> Unit) {
         viewModelScope.launch {
             repository.saveSettings(url, key, deviceName)
+            _error.value = null // Clear any leftover errors from startup
             onComplete()
+            refreshData() // Instantly refresh data with new settings
         }
     }
 
