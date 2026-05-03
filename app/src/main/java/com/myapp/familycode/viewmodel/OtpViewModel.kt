@@ -140,21 +140,13 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
     // ----------------------------------------------------------------
 
     /**
-     * Cycles SYSTEM → LIGHT → DARK → SYSTEM and persists the choice.
+     * Cycles LIGHT ↔ DARK and persists the choice.
      */
     fun toggleTheme() {
-        val next = when (_themeMode.value) {
-            ThemeMode.SYSTEM -> ThemeMode.LIGHT
-            ThemeMode.LIGHT  -> ThemeMode.DARK
-            ThemeMode.DARK   -> ThemeMode.SYSTEM
-        }
+        val next = if (_themeMode.value == ThemeMode.DARK) ThemeMode.LIGHT else ThemeMode.DARK
         _themeMode.value = next
         repository.saveThemePreference(
-            when (next) {
-                ThemeMode.LIGHT  -> "light"
-                ThemeMode.DARK   -> "dark"
-                ThemeMode.SYSTEM -> "system"
-            }
+            if (next == ThemeMode.LIGHT) "light" else "dark"
         )
     }
 }
