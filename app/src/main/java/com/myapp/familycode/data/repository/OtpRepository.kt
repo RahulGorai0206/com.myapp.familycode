@@ -4,9 +4,7 @@ import android.content.Context
 import com.myapp.familycode.GoogleSheetsLogger
 import com.myapp.familycode.data.db.DeviceDao
 import com.myapp.familycode.data.db.OtpDao
-import com.myapp.familycode.data.db.toDeviceInfo
 import com.myapp.familycode.data.db.toEntity
-import com.myapp.familycode.data.db.toOtpItem
 import com.myapp.familycode.data.model.DeviceInfo
 import com.myapp.familycode.data.model.OtpItem
 import com.myapp.familycode.data.model.SyncResponse
