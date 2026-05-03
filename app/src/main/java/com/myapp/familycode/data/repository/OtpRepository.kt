@@ -1,6 +1,7 @@
 package com.myapp.familycode.data.repository
 
 import android.content.Context
+import android.provider.Settings
 import com.myapp.familycode.GoogleSheetsLogger
 import com.myapp.familycode.data.db.DeviceDao
 import com.myapp.familycode.data.db.OtpDao
@@ -50,7 +51,9 @@ class OtpRepository(
             putString("api_key", key)
             if (deviceName != null) putString("device_name", deviceName)
             if (sharedPrefs.getString("device_id", "").isNullOrBlank()) {
-                putString("device_id", UUID.randomUUID().toString())
+                val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+                val newId = if (!androidId.isNullOrBlank()) androidId else UUID.randomUUID().toString()
+                putString("device_id", newId)
             }
             apply()
         }
