@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Delete
 import com.myapp.familycode.ui.components.DeviceListSection
 import com.myapp.familycode.ui.components.OtpListItem
 import com.myapp.familycode.viewmodel.OtpViewModel
@@ -51,7 +52,10 @@ fun HomeScreen(
     val pullState = rememberPullToRefreshState()
 
     LaunchedEffect(error) {
-        error?.let { snackbarHostState.showSnackbar(it) }
+        error?.let { 
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
     }
 
     Scaffold(
@@ -157,12 +161,49 @@ fun HomeScreen(
                     }
                 }
 
-                items(otpList, key = { it.timestamp + it.otpCode }) { otp ->
+                items(otpList, key = { it.timestamp }) { otp ->
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { dismissValue ->
+                            if (dismissValue == SwipeToDismissBoxValue.EndToStart || dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+                                viewModel.deleteOtp(otp.timestamp)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                    )
+
                     AnimatedVisibility(
                         visible = true,
                         enter = fadeIn() + slideInVertically { it / 2 }
                     ) {
-                        OtpListItem(otp, tick = tick)
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            backgroundContent = {
+                                val color by animateColorAsState(
+                                    when (dismissState.targetValue) {
+                                        SwipeToDismissBoxValue.Settled -> MaterialTheme.colorScheme.surface
+                                        else -> MaterialTheme.colorScheme.errorContainer
+                                    }, label = "dismissColor"
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(color)
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Delete OTP",
+                                        tint = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        ) {
+                            OtpListItem(otp, tick = tick)
+                        }
                     }
                 }
 

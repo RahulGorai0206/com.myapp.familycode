@@ -8,8 +8,11 @@ import com.myapp.familycode.data.repository.OtpRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -21,14 +24,16 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _deviceCount = MutableStateFlow(0)
-    val deviceCount: StateFlow<Int> = _deviceCount.asStateFlow()
+    // Observe local Room DB directly
+    val otpList: StateFlow<List<OtpItem>> = repository.localOtps
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _deviceList = MutableStateFlow<List<DeviceInfo>>(emptyList())
-    val deviceList: StateFlow<List<DeviceInfo>> = _deviceList.asStateFlow()
+    val deviceList: StateFlow<List<DeviceInfo>> = repository.localDevices
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _otpList = MutableStateFlow<List<OtpItem>>(emptyList())
-    val otpList: StateFlow<List<OtpItem>> = _otpList.asStateFlow()
+    // Derive device count from the local device list
+    val deviceCount: StateFlow<Int> = deviceList.map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
@@ -63,15 +68,31 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
             _isLoading.value = true
             _error.value = null
             val response = repository.fetchLatestOtps()
-            if (response.success) {
-                _deviceCount.value = response.deviceCount ?: 0
-                _deviceList.value  = response.deviceList  ?: emptyList()
-                _otpList.value     = response.recentOtps  ?: emptyList()
-            } else {
-                _error.value = response.error ?: "Unknown error"
+            if (!response.success && !response.error.isNullOrBlank()) {
+                _error.value = response.error
             }
             _isLoading.value = false
         }
+    }
+
+    // ----------------------------------------------------------------
+    //  Swipe-to-Delete
+    // ----------------------------------------------------------------
+
+    fun deleteOtp(timestamp: String) {
+        viewModelScope.launch {
+            try {
+                repository.deleteOtpLocallyAndRemotely(timestamp)
+            } catch (e: Exception) {
+                _error.value = e.message
+                // Optionally refresh data here to revert local delete if remote fails
+                refreshData()
+            }
+        }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 
     // ----------------------------------------------------------------

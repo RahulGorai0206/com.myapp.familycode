@@ -163,4 +163,23 @@ object GoogleSheetsLogger {
             -1
         }
     }
+
+    suspend fun deleteOtp(timestamp: String, deviceId: String): Boolean {
+        val url = currentUrl
+        val key = apiKey
+
+        if (url.isNullOrBlank() || key.isNullOrBlank()) {
+            return false
+        }
+
+        val loggerApi = api ?: return false
+
+        return try {
+            val response = loggerApi.deleteOtp(url = url, apiKey = key, timestamp = timestamp, deviceId = deviceId)
+            response.success
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }

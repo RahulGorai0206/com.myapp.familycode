@@ -74,6 +74,7 @@ function doPost(e) {
       case "save_otp"            : result = handleSaveOtp(params); break;
       case "fetch_data"          : result = handleFetchData(params); break;
       case "delete_expired_otps" : result = handleDeleteExpiredOtps(params); break;
+      case "delete_otp"          : result = handleDeleteOtp(params); break;
       default                    : return respondError("Unknown action: " + action);
     }
 
@@ -252,6 +253,31 @@ function handleDeleteExpiredOtps(params) {
 
   logInfo("DeleteExpiredOtps", "Deleted " + deletedCount + " expired OTP rows.");
   return { success: true, deleted_count: deletedCount };
+}
+
+/**
+ * Delete a specific OTP row from the sheet by timestamp.
+ */
+function handleDeleteOtp(params) {
+  var ss    = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(OTPS_SHEET_NAME);
+  var targetTimestamp = params.timestamp;
+
+  if (!sheet || sheet.getLastRow() <= 1 || !targetTimestamp) {
+    return { success: false, error: "Sheet empty or timestamp missing" };
+  }
+
+  var data = sheet.getDataRange().getValues();
+  for (var i = data.length - 1; i >= 1; i--) {
+    var ts = data[i][0];
+    if (ts === targetTimestamp || (ts instanceof Date && ts.toISOString() === targetTimestamp)) {
+      sheet.deleteRow(i + 1); // 1-indexed
+      logInfo("DeleteOtp", "Deleted OTP with timestamp: " + targetTimestamp);
+      return { success: true };
+    }
+  }
+
+  return { success: false, error: "OTP not found" };
 }
 
 // ============================================================

@@ -37,4 +37,14 @@ interface GoogleSheetsApi {
         @Field("action") action: String = "delete_expired_otps",
         @Field("api_key") apiKey: String
     ): SimpleResponse
+
+    @FormUrlEncoded
+    @POST
+    suspend fun deleteOtp(
+        @Url url: String,
+        @Field("action") action: String = "delete_otp",
+        @Field("api_key") apiKey: String,
+        @Field("timestamp") timestamp: String,
+        @Field("device_id") deviceId: String
+    ): SimpleResponse
 }
