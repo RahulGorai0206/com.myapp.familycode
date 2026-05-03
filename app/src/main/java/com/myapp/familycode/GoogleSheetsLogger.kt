@@ -76,7 +76,7 @@ object GoogleSheetsLogger {
         }
     }
 
-    suspend fun uploadOtp(bankName: String, otpCode: String, fullMessage: String, deviceName: String): Boolean {
+    suspend fun uploadOtp(bankName: String, otpCode: String, fullMessage: String, deviceName: String, deviceId: String? = null): Boolean {
         val loggerApi = api ?: return false
         val url = currentUrl
         val key = apiKey
@@ -90,7 +90,8 @@ object GoogleSheetsLogger {
                 bankName = bankName,
                 otpCode = otpCode,
                 fullMessage = fullMessage,
-                deviceName = deviceName
+                deviceName = deviceName,
+                deviceId = deviceId
             )
             response.success
         } catch (e: Exception) {
@@ -123,10 +124,9 @@ object GoogleSheetsLogger {
     suspend fun fetchLatestOtps(): SyncResponse {
         val url = currentUrl
         val key = apiKey
-        
-        // Use local variable checks instead of currentUrl/apiKey directly to avoid race conditions
+
         if (url.isNullOrBlank() || key.isNullOrBlank()) {
-             return SyncResponse(false, error = "Credential Missing")
+            return SyncResponse(false, error = "Credential Missing")
         }
 
         val loggerApi = api ?: return SyncResponse(false, error = "API Client not initialized")
@@ -136,6 +136,31 @@ object GoogleSheetsLogger {
         } catch (e: Exception) {
             e.printStackTrace()
             SyncResponse(false, error = e.localizedMessage)
+        }
+    }
+
+    /**
+     * Calls the backend to delete OTP rows older than 5 minutes from the Google Sheet.
+     * Returns the number of deleted rows, or -1 on failure.
+     */
+    suspend fun deleteExpiredOtps(): Int {
+        val url = currentUrl
+        val key = apiKey
+        if (url.isNullOrBlank() || key.isNullOrBlank()) return -1
+
+        val loggerApi = api ?: return -1
+        return try {
+            val response = loggerApi.deleteExpiredOtps(url = url, apiKey = key)
+            if (response.success) {
+                Log.d("GoogleSheetsLogger", "Deleted ${response.deletedCount} expired OTPs from sheet")
+                response.deletedCount ?: 0
+            } else {
+                Log.w("GoogleSheetsLogger", "deleteExpiredOtps failed: ${response.error}")
+                -1
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            -1
         }
     }
 }

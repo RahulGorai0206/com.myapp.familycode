@@ -29,4 +29,12 @@ interface GoogleSheetsApi {
         @Field("action") action: String = "fetch_data",
         @Field("api_key") apiKey: String
     ): SyncResponse
+
+    @FormUrlEncoded
+    @POST
+    suspend fun deleteExpiredOtps(
+        @Url url: String,
+        @Field("action") action: String = "delete_expired_otps",
+        @Field("api_key") apiKey: String
+    ): SimpleResponse
 }
