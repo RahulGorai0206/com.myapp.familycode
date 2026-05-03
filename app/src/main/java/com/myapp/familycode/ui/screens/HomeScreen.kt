@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.*
@@ -37,8 +36,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: OtpViewModel = koinViewModel(),
-    onSettingsClick: () -> Unit
+    viewModel: OtpViewModel = koinViewModel()
 ) {
     val otpList    by viewModel.otpList.collectAsState()
     val isLoading  by viewModel.isLoading.collectAsState()
@@ -96,14 +94,6 @@ fun HomeScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    // Settings / re-setup
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -144,7 +134,8 @@ fun HomeScreen(
                 item(key = "devices") {
                     DeviceListSection(
                         deviceList = deviceList,
-                        deviceCount = deviceCount
+                        deviceCount = deviceCount,
+                        currentDeviceId = viewModel.currentDeviceId
                     )
                 }
 

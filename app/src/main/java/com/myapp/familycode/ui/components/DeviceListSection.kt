@@ -32,6 +32,7 @@ import java.util.Locale
 fun DeviceListSection(
     deviceList: List<DeviceInfo>,
     deviceCount: Int,
+    currentDeviceId: String,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(true) }
@@ -126,7 +127,7 @@ fun DeviceListSection(
                         }
                     } else {
                         deviceList.forEach { device ->
-                            DeviceRow(device)
+                            DeviceRow(device, isCurrentDevice = (device.deviceId == currentDeviceId))
                         }
                     }
                 }
@@ -136,8 +137,8 @@ fun DeviceListSection(
 }
 
 @Composable
-private fun DeviceRow(device: DeviceInfo) {
-    val isRecent = remember(device.lastSeen) { isDeviceRecent(device.lastSeen) }
+private fun DeviceRow(device: DeviceInfo, isCurrentDevice: Boolean) {
+    val isRecent = remember(device.lastSeen) { isDeviceRecent(device.lastSeen) } || isCurrentDevice
 
     Row(
         modifier = Modifier
@@ -170,30 +171,45 @@ private fun DeviceRow(device: DeviceInfo) {
             maxLines = 1
         )
 
-        // Last-seen chip
-        Surface(
-            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+        if (isCurrentDevice) {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Icon(
-                    if (isRecent) Icons.Default.Wifi else Icons.Default.WifiOff,
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = if (isRecent) MaterialTheme.colorScheme.primary
-                           else MaterialTheme.colorScheme.outline
-                )
                 Text(
-                    text = formatLastSeen(device.lastSeen),
+                    text = "Current",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                    color = if (isRecent) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Medium
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
+            }
+        } else {
+            // Last-seen chip
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        if (isRecent) Icons.Default.Wifi else Icons.Default.WifiOff,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = if (isRecent) MaterialTheme.colorScheme.primary
+                               else MaterialTheme.colorScheme.outline
+                    )
+                    Text(
+                        text = formatLastSeen(device.lastSeen),
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = if (isRecent) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

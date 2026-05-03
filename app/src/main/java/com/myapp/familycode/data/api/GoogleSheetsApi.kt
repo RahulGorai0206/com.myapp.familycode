@@ -27,7 +27,8 @@ interface GoogleSheetsApi {
     suspend fun fetchData(
         @Url url: String,
         @Field("action") action: String = "fetch_data",
-        @Field("api_key") apiKey: String
+        @Field("api_key") apiKey: String,
+        @Field("device_id") deviceId: String? = null
     ): SyncResponse
 
     @FormUrlEncoded

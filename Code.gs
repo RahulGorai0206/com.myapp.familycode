@@ -173,6 +173,11 @@ function handleFetchData(params) {
   // Clean up expired OTPs before reading them!
   handleDeleteExpiredOtps();
 
+  // Update last seen for the fetching device
+  if (params.device_id) {
+    _updateDeviceLastSeen(params.device_id, null);
+  }
+
   // ---- Build unique device list ----
   var deviceData = devicesSheet.getDataRange().getValues();
   var deviceList = [];

@@ -374,6 +374,7 @@ fun CloudSyncStep(
                 listOf(
                     R.string.setup_step_1, R.string.setup_step_2, R.string.setup_step_3,
                     R.string.setup_step_4, R.string.setup_step_5, R.string.setup_step_6,
+                    R.string.setup_step_7, R.string.setup_step_8,
                     R.string.setup_step_9, R.string.setup_step_10, R.string.setup_step_11
                 ).forEach { stepRes ->
                     Text(

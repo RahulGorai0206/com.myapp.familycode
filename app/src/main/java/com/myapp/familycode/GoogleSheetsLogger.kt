@@ -121,7 +121,7 @@ object GoogleSheetsLogger {
         }
     }
 
-    suspend fun fetchLatestOtps(): SyncResponse {
+    suspend fun fetchLatestOtps(deviceId: String? = null): SyncResponse {
         val url = currentUrl
         val key = apiKey
 
@@ -132,7 +132,7 @@ object GoogleSheetsLogger {
         val loggerApi = api ?: return SyncResponse(false, error = "API Client not initialized")
 
         return try {
-            loggerApi.fetchData(url = url, apiKey = key)
+            loggerApi.fetchData(url = url, apiKey = key, deviceId = deviceId)
         } catch (e: Exception) {
             e.printStackTrace()
             SyncResponse(false, error = e.localizedMessage)

@@ -71,6 +71,7 @@ class OtpReceiver : BroadcastReceiver() {
             .setUsesChronometer(true)
             .setChronometerCountDown(true)
             .setWhen(triggerAt)
+            .setTimeoutAfter(15000)
             .addAction(android.R.drawable.ic_input_add, "Share", acceptPendingIntent)
             .addAction(android.R.drawable.ic_delete, "Ignore", denyPendingIntent)
             .build()

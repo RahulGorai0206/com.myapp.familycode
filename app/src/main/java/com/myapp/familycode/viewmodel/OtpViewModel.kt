@@ -35,6 +35,9 @@ class OtpViewModel(private val repository: OtpRepository) : ViewModel() {
     val deviceCount: StateFlow<Int> = deviceList.map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    val currentDeviceId: String
+        get() = repository.getCurrentDeviceId()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 

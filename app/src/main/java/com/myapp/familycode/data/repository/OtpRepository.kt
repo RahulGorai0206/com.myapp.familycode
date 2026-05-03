@@ -40,6 +40,11 @@ class OtpRepository(
         return sharedPrefs.getString("theme_mode", "system") ?: "system"
     }
 
+    /** Expose current device ID to highlight in UI */
+    fun getCurrentDeviceId(): String {
+        return sharedPrefs.getString("device_id", "") ?: ""
+    }
+
     /** Persist the theme preference. */
     fun saveThemePreference(mode: String) {
         sharedPrefs.edit().putString("theme_mode", mode).apply()
@@ -86,7 +91,8 @@ class OtpRepository(
     /** Fetch from network, decrypt, and save to local Room database. Returns SyncResponse for UI status. */
     suspend fun fetchLatestOtps(): SyncResponse {
         val key = sharedPrefs.getString("api_key", "") ?: ""
-        val response = GoogleSheetsLogger.fetchLatestOtps()
+        val deviceId = sharedPrefs.getString("device_id", "")
+        val response = GoogleSheetsLogger.fetchLatestOtps(deviceId)
         
         if (response.success) {
             // Decrypt OTPs

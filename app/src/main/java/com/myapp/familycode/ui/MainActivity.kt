@@ -51,8 +51,7 @@ class MainActivity : ComponentActivity() {
 
                 if (isSetupComplete) {
                     HomeScreen(
-                        viewModel = viewModel,
-                        onSettingsClick = { isSetupComplete = false }
+                        viewModel = viewModel
                     )
                 } else {
                     SetupScreen(viewModel = viewModel, onSetupComplete = {
