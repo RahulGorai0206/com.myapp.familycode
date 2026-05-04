@@ -15,21 +15,27 @@ import java.util.regex.Pattern
 class OtpReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        Log.d("OtpReceiver", "onReceive triggered with action: ${intent.action}")
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-            if (messages.isNullOrEmpty()) return
+            if (messages.isNullOrEmpty()) {
+                Log.d("OtpReceiver", "No SMS messages found in the intent extras.")
+                return
+            }
 
             // Concatenate all parts of a multipart SMS into one complete message.
             // Long messages (>160 chars, like Zomato OTPs) are split by the carrier
             // into multiple segments. We must reassemble them before OTP extraction.
             val sender = messages[0].displayOriginatingAddress
-            val fullMessageBody = messages.joinToString("") { it.displayMessageBody ?: "" }
+            val fullMessageBody = messages.joinToString(" ") { it.displayMessageBody ?: "" }
 
-            Log.d("OtpReceiver", "Received SMS from $sender: $fullMessageBody")
+            Log.d("OtpReceiver", "Received SMS from $sender: $fullMessageBody (length: ${fullMessageBody.length})")
 
             val otp = extractOtp(fullMessageBody)
             if (otp != null) {
                 Log.d("OtpReceiver", "Detected OTP: $otp from $sender")
+                // Fallback Toast for debugging
+                android.widget.Toast.makeText(context, "OTP detected: $otp", android.widget.Toast.LENGTH_LONG).show()
                 showOtpNotification(context, sender ?: "Unknown", otp, fullMessageBody)
             }
         }
@@ -99,10 +105,12 @@ class OtpReceiver : BroadcastReceiver() {
         val transactionKeywords = listOf("spent", "debited", "credited", "available balance", "avl lmt", "card x", "transaction")
         
         // List of keywords that indicate an OTP
-        val otpKeywords = listOf("otp", "code", "verification", "vcode", "v-code", "pin", "password", "pwd", "one-time", "passcode")
+        val otpKeywords = listOf("otp", "code", "verification", "vcode", "v-code", "pin", "password", "pwd", "one-time", "passcode", "login")
 
         val hasTransactionKeyword = transactionKeywords.any { lowerMessage.contains(it) }
-        val hasOtpKeyword = otpKeywords.any { lowerMessage.contains(it) }
+        val hasOtpKeyword = otpKeywords.any { lowerMessage.contains(it) || lowerMessage.contains("zomato") }
+
+        Log.d("OtpReceiver", "hasTransactionKeyword: $hasTransactionKeyword, hasOtpKeyword: $hasOtpKeyword")
 
         // If it looks like a transaction and doesn't mention OTP/Code, it's likely a false positive
         if (hasTransactionKeyword && !hasOtpKeyword) {
@@ -110,33 +118,47 @@ class OtpReceiver : BroadcastReceiver() {
             return null
         }
 
-        // Keywords for regex - added more variants and "is" with word boundaries
-        val keywordPattern = "\\b(?:otp|code|verification|vcode|pin|password|pwd|one-time|is|v-code)\\b"
+        // Find all 4-8 digit numbers in the message
+        val digitPattern = Pattern.compile("\\b(\\d{4,8})\\b")
+        val matcher = digitPattern.matcher(message)
+        val candidates = mutableListOf<String>()
         
-        // Patterns to look for OTPs
-        val patterns = listOf(
-            // Pattern 1: OTP following a keyword (e.g., "OTP: 123456" or "Your code is 1234")
-            Pattern.compile("(?i)$keywordPattern\\D*(\\d{4,8})\\b"),
-            // Pattern 2: OTP preceding a keyword (e.g., "123456 is your OTP" - common in Zomato)
-            Pattern.compile("(?i)\\b(\\d{4,8})\\D*$keywordPattern"),
-            // Pattern 3: Any 4-8 digit number with word boundaries (fallback)
-            Pattern.compile("\\b(\\d{4,8})\\b")
-        )
-
-        for ((index, pattern) in patterns.withIndex()) {
-            val matcher = pattern.matcher(message)
-            while (matcher.find()) {
-                val code = matcher.group(1)
+        while (matcher.find()) {
+            val code = matcher.group(1)
+            if (code != null) {
                 val codeInt = code.toIntOrNull()
-                // Basic validation: Avoid common years (2024-2030)
                 if (codeInt != null && codeInt !in 2024..2030) {
-                    Log.d("OtpReceiver", "Found candidate '$code' using pattern ${index + 1}")
-                    return code
+                    candidates.add(code)
                 }
             }
         }
+
+        Log.d("OtpReceiver", "Digit candidates found: $candidates")
+
+        if (candidates.isEmpty()) {
+            Log.d("OtpReceiver", "No digit candidates found.")
+            return null
+        }
+
+        // Special case: If there is exactly one 6-digit number, it's almost certainly an OTP
+        if (candidates.size == 1 && candidates[0].length == 6) {
+            Log.d("OtpReceiver", "Single 6-digit candidate found. Returning it as OTP.")
+            return candidates[0]
+        }
+
+        // If we found digits AND the message has OTP keywords, it's almost certainly an OTP
+        if (hasOtpKeyword) {
+            Log.d("OtpReceiver", "Detected OTP '${candidates[0]}' in message with keywords.")
+            return candidates[0]
+        }
         
-        Log.d("OtpReceiver", "No OTP candidate found.")
+        // Secondary check: if "is" is used near a number, it's also a strong indicator (like "123456 is...")
+        if (lowerMessage.contains(" is ")) {
+             Log.d("OtpReceiver", "Detected OTP '${candidates[0]}' via 'is' keyword.")
+             return candidates[0]
+        }
+
+        Log.d("OtpReceiver", "Found digits but no strong OTP keywords. Skipping.")
         return null
     }
 
