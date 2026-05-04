@@ -93,41 +93,50 @@ class OtpReceiver : BroadcastReceiver() {
 
     private fun extractOtp(message: String): String? {
         val lowerMessage = message.lowercase()
+        Log.d("OtpReceiver", "Extracting OTP from: $message")
         
         // List of keywords that strongly indicate this is NOT an OTP message but a transaction alert
         val transactionKeywords = listOf("spent", "debited", "credited", "available balance", "avl lmt", "card x", "transaction")
         
         // List of keywords that indicate an OTP
-        val otpKeywords = listOf("otp", "code", "verification", "vcode", "pin", "password", "pwd", "one-time")
+        val otpKeywords = listOf("otp", "code", "verification", "vcode", "v-code", "pin", "password", "pwd", "one-time", "passcode")
 
         val hasTransactionKeyword = transactionKeywords.any { lowerMessage.contains(it) }
         val hasOtpKeyword = otpKeywords.any { lowerMessage.contains(it) }
 
         // If it looks like a transaction and doesn't mention OTP/Code, it's likely a false positive
         if (hasTransactionKeyword && !hasOtpKeyword) {
+            Log.d("OtpReceiver", "Message looks like a transaction without OTP keyword, skipping.")
             return null
         }
 
+        // Keywords for regex - added more variants and "is" with word boundaries
+        val keywordPattern = "\\b(?:otp|code|verification|vcode|pin|password|pwd|one-time|is|v-code)\\b"
+        
         // Patterns to look for OTPs
         val patterns = listOf(
-            // Pattern 1: OTP following a keyword (e.g., "OTP: 123456" or "code is 1234")
-            Pattern.compile("(?i)(?:otp|code|is|verification|vcode|pin)\\D*(\\d{4,8})\\b"),
-            // Pattern 2: Any 4-8 digit number with word boundaries (fallback)
+            // Pattern 1: OTP following a keyword (e.g., "OTP: 123456" or "Your code is 1234")
+            Pattern.compile("(?i)$keywordPattern\\D*(\\d{4,8})\\b"),
+            // Pattern 2: OTP preceding a keyword (e.g., "123456 is your OTP" - common in Zomato)
+            Pattern.compile("(?i)\\b(\\d{4,8})\\D*$keywordPattern"),
+            // Pattern 3: Any 4-8 digit number with word boundaries (fallback)
             Pattern.compile("\\b(\\d{4,8})\\b")
         )
 
-        for (pattern in patterns) {
+        for ((index, pattern) in patterns.withIndex()) {
             val matcher = pattern.matcher(message)
             while (matcher.find()) {
                 val code = matcher.group(1)
-                // Basic validation: Avoid common years (2024-2030)
                 val codeInt = code.toIntOrNull()
+                // Basic validation: Avoid common years (2024-2030)
                 if (codeInt != null && codeInt !in 2024..2030) {
+                    Log.d("OtpReceiver", "Found candidate '$code' using pattern ${index + 1}")
                     return code
                 }
             }
         }
         
+        Log.d("OtpReceiver", "No OTP candidate found.")
         return null
     }
 
