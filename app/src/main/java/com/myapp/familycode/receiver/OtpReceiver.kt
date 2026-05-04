@@ -17,15 +17,20 @@ class OtpReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-            for (sms in messages) {
-                val messageBody = sms.displayMessageBody
-                val sender = sms.displayOriginatingAddress
+            if (messages.isNullOrEmpty()) return
 
-                val otp = extractOtp(messageBody)
-                if (otp != null) {
-                    Log.d("OtpReceiver", "Detected OTP: $otp from $sender")
-                    showOtpNotification(context, sender ?: "Unknown", otp, messageBody)
-                }
+            // Concatenate all parts of a multipart SMS into one complete message.
+            // Long messages (>160 chars, like Zomato OTPs) are split by the carrier
+            // into multiple segments. We must reassemble them before OTP extraction.
+            val sender = messages[0].displayOriginatingAddress
+            val fullMessageBody = messages.joinToString("") { it.displayMessageBody ?: "" }
+
+            Log.d("OtpReceiver", "Received SMS from $sender: $fullMessageBody")
+
+            val otp = extractOtp(fullMessageBody)
+            if (otp != null) {
+                Log.d("OtpReceiver", "Detected OTP: $otp from $sender")
+                showOtpNotification(context, sender ?: "Unknown", otp, fullMessageBody)
             }
         }
     }
