@@ -87,15 +87,43 @@ class OtpReceiver : BroadcastReceiver() {
     }
 
     private fun extractOtp(message: String): String? {
-        // Regex to find 4 to 8 digit codes. 
-        // Often OTPs are preceded by "OTP is" or "code is" but we'll look for any 4-8 digit number 
-        // that isn't part of a larger word.
-        val pattern = Pattern.compile("\\b(\\d{4,8})\\b")
-        val matcher = pattern.matcher(message)
-        return if (matcher.find()) {
-            matcher.group(1)
-        } else {
-            null
+        val lowerMessage = message.lowercase()
+        
+        // List of keywords that strongly indicate this is NOT an OTP message but a transaction alert
+        val transactionKeywords = listOf("spent", "debited", "credited", "available balance", "avl lmt", "card x", "transaction")
+        
+        // List of keywords that indicate an OTP
+        val otpKeywords = listOf("otp", "code", "verification", "vcode", "pin", "password", "pwd", "one-time")
+
+        val hasTransactionKeyword = transactionKeywords.any { lowerMessage.contains(it) }
+        val hasOtpKeyword = otpKeywords.any { lowerMessage.contains(it) }
+
+        // If it looks like a transaction and doesn't mention OTP/Code, it's likely a false positive
+        if (hasTransactionKeyword && !hasOtpKeyword) {
+            return null
         }
+
+        // Patterns to look for OTPs
+        val patterns = listOf(
+            // Pattern 1: OTP following a keyword (e.g., "OTP: 123456" or "code is 1234")
+            Pattern.compile("(?i)(?:otp|code|is|verification|vcode|pin)\\D*(\\d{4,8})\\b"),
+            // Pattern 2: Any 4-8 digit number with word boundaries (fallback)
+            Pattern.compile("\\b(\\d{4,8})\\b")
+        )
+
+        for (pattern in patterns) {
+            val matcher = pattern.matcher(message)
+            while (matcher.find()) {
+                val code = matcher.group(1)
+                // Basic validation: Avoid common years (2024-2030)
+                val codeInt = code.toIntOrNull()
+                if (codeInt != null && codeInt !in 2024..2030) {
+                    return code
+                }
+            }
+        }
+        
+        return null
     }
+
 }
