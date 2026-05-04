@@ -5,17 +5,42 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ---- Keep line numbers for crash reports ----
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ---- Gson / Retrofit serialization ----
+# Keep all data model classes used by Gson for JSON deserialization.
+# R8 would rename/remove fields that Gson needs to map via @SerializedName.
+-keep class com.myapp.familycode.data.model.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep Gson annotations
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.gson.** { *; }
+-keepclassmembers,allowobfuscation class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# ---- Retrofit ----
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Exceptions
+
+# ---- OkHttp ----
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# ---- Koin ----
+-keep class org.koin.** { *; }
+
+# ---- Room ----
+# Room uses generated code; keep DAO and Entity classes.
+-keep class com.myapp.familycode.data.db.** { *; }
+
+# ---- BroadcastReceivers (referenced from AndroidManifest) ----
+-keep class com.myapp.familycode.receiver.** { *; }
+
+# ---- Kotlin ----
+-dontwarn kotlin.**
+-dontwarn kotlinx.**
