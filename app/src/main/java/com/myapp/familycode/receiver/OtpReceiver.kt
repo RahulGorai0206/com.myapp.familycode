@@ -33,10 +33,16 @@ class OtpReceiver : BroadcastReceiver() {
 
             val otp = extractOtp(fullMessageBody)
             if (otp != null) {
-                Log.d("OtpReceiver", "Detected OTP: $otp from $sender")
-                // Fallback Toast for debugging
-                android.widget.Toast.makeText(context, "OTP detected: $otp", android.widget.Toast.LENGTH_LONG).show()
-                showOtpNotification(context, sender ?: "Unknown", otp, fullMessageBody)
+                // Dedup with SmsObserverService to avoid duplicate notifications
+                val dedupKey = "${sender}|${otp}"
+                if (OtpDeduplicator.tryProcess(dedupKey)) {
+                    Log.d("OtpReceiver", "Detected OTP: $otp from $sender")
+                    // Fallback Toast for debugging
+                    android.widget.Toast.makeText(context, "OTP detected: $otp", android.widget.Toast.LENGTH_LONG).show()
+                    showOtpNotification(context, sender ?: "Unknown", otp, fullMessageBody)
+                } else {
+                    Log.d("OtpReceiver", "OTP $otp from $sender already handled, skipping")
+                }
             }
         }
     }
