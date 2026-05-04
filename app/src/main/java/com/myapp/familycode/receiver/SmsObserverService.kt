@@ -133,7 +133,7 @@ class SmsObserverService : Service() {
                     // Dedup key: use SMS database _id
                     val dedupKey = "sms_$id"
                     if (!OtpDeduplicator.tryProcess(dedupKey)) {
-                        Log.d(TAG, "SMS $_id already processed, skipping")
+                        Log.d(TAG, "SMS $id already processed, skipping")
                         return
                     }
 
