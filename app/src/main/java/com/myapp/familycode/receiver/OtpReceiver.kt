@@ -98,8 +98,11 @@ class OtpReceiver : BroadcastReceiver() {
     }
 
     private fun extractOtp(message: String): String? {
-        val lowerMessage = message.lowercase()
-        Log.d("OtpReceiver", "Extracting OTP from: $message")
+        // Step 1: Clean the message by removing common App Hashes (11 chars at end)
+        val cleanedMessage = message.replace(Regex("\\s+[a-zA-Z0-9+/]{11}$"), "").trim()
+        val lowerMessage = cleanedMessage.lowercase()
+        
+        Log.d("OtpReceiver", "Extracting OTP from cleaned message: $cleanedMessage")
         
         // List of keywords that strongly indicate this is NOT an OTP message but a transaction alert
         val transactionKeywords = listOf("spent", "debited", "credited", "available balance", "avl lmt", "card x", "transaction")
@@ -118,9 +121,9 @@ class OtpReceiver : BroadcastReceiver() {
             return null
         }
 
-        // Find all 4-8 digit numbers in the message
-        val digitPattern = Pattern.compile("\\b(\\d{4,8})\\b")
-        val matcher = digitPattern.matcher(message)
+        // Find all 4-8 digit numbers in the message (relaxed boundary check)
+        val digitPattern = Pattern.compile("(\\d{4,8})")
+        val matcher = digitPattern.matcher(cleanedMessage)
         val candidates = mutableListOf<String>()
         
         while (matcher.find()) {
